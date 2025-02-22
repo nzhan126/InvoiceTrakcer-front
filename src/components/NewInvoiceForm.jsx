@@ -5,6 +5,14 @@ const NewInvoiceForm = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [invoiceFormData, setInvoiceFormData] = useState(null);
 
+
+
+
+
+
+
+
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!invoiceFormData.has('invoiceNumber')) {
@@ -15,11 +23,14 @@ const NewInvoiceForm = () => {
       alert('Empty file!');
     } else if (!invoiceFormData.has('invoiceDate')) {
       alert('Empty invoiceDate!');
+    } else if(!invoiceFormData.has('project')){
+      alert('Empty project!');
     }
 
     saveInvoice(invoiceFormData);
     setIsModalOpen(false);
     setInvoiceFormData(null);
+    window.location.reload();
   };
 
   const handleCancle = () => {
@@ -89,6 +100,16 @@ const NewInvoiceForm = () => {
               type="date"
               id="invoiceDate"
               name="invoiceDate"
+              onChange={handleInputChange}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="project">Project</label>
+            <input
+              type="text"
+              id="project"
+              name="project"
               onChange={handleInputChange}
             />
           </div>
