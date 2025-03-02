@@ -1,27 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { getAllInvoice } from '../api/InvoiceService';
 
-
-
 const getFileUrl = (filePath) => {
-    // Replace the local file path prefix with the URL path to access it
-    const basePath = '';  // This should match your static folder structure
-    const fileName = filePath.replace('/Users/ni/projects/server/src/main/resources/static', basePath);
+    // Define the URL path to access files in the public static directory
+    const basePath = '';  // This should match the path where the file is publicly accessible
+    const fileName = filePath.replace('/Users/ni/projects/invoice-tracker-server/src/main/resources/static', basePath);
     return `http://localhost:8080${fileName}`;
 };
 
-//delete button
+
 
 const handleDelete = async (invoiceNumber) => {
     if (window.confirm("Are you sure you want to delete this invoice?")) {
         try {
-            const response = await fetch(` http://localhost:8080/delete-invoice/${invoiceNumber}`, {
+            const response = await fetch(`http://localhost:8080/delete-invoice/${invoiceNumber}`, {
                 method: "DELETE",
             });
   
             if (response.ok) {
                 alert("Invoice deleted successfully.");
-                //refresh the list or update the state to remove the deleted invoice
                 window.location.reload(); 
             } else {
                 alert("Failed to delete the invoice. Please try again.");
@@ -31,64 +28,77 @@ const handleDelete = async (invoiceNumber) => {
             alert("An error occurred while deleting the invoice.");
         }
     }
-  };
+};
 
 const InvoiceList = () => {
     const [invoiceList, setInvoiceList] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+
     useEffect(() => {
         setLoading(true);
         getAllInvoice().then(result => {
-            let list = result.data.map(
-                invoice => {
-                    const readableDate = new Date(invoice.invoiceDate).toLocaleDateString();
-
-                return(<tr key={invoice.invoiceNumber}>
-                        <td style={{ padding: "10px" }}> <strong>Invoice Number</strong> : {invoice.invoiceNumber}</td>
-                        <td style={{ padding: "10px" }}> <strong>Vendor</strong>: {invoice.vendor}</td>
-                        <td style={{ padding: "10px" }}> <strong>Amount</strong>: {invoice.invoiceNumber}</td>
-                        <td style={{ padding: "10px" }}> <strong>Date</strong>: {readableDate}</td>
-                        <td style={{ padding: "10px" }}> <strong>Project</strong>: {invoice.project}</td>
-                        <td style={{ padding: "10px" }}> <a href={getFileUrl(invoice.filePath)} target="_blank" rel="noopener noreferrer">
-        View File
-    </a></td>
-                        <td style={{ padding: "10px" }}>
-            <button
-                onClick={() => handleDelete(invoice.invoiceNumber)}
-                style={{
-                    backgroundColor: "red",
-                    color: "white",
-                    border: "none",
-                    padding: "5px 10px",
-                    fontSize: "12px",
-                    cursor: "pointer",
-                }}
-            >
-                Delete
-            </button>
-        </td>
-                
-                </tr>);
-                
-                }
-            );
-            setInvoiceList(list);
-        });
-        setLoading(false);
+            setInvoiceList(result.data);
+            setLoading(false);
+        }).catch(() => setLoading(false));
     }, []);
 
+    const filteredInvoices = invoiceList.filter(invoice =>
+        invoice.vendor.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+        invoice.project.toLowerCase().startsWith(searchTerm.toLowerCase())
+    );
+
     if (loading) {
-        return (<div>
-            <span>Is loading</span>
-        </div>);
+        return <div><span>Loading...</span></div>;
     }
     
     return (
         <div>
             <h2>Invoices</h2>
-            <ul>
-                {invoiceList}
-            </ul>
+            <input 
+                type="text" 
+                placeholder="Search by vendor or project..." 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+                style={{ marginBottom: "10px", padding: "5px", width: "100%" }}
+            />
+            <table>
+                <thead>
+                    <tr>
+                        <th>Invoice Number</th>
+                        <th>Vendor</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Project</th>
+                        <th>File</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {filteredInvoices.map(invoice => (
+                        <tr key={invoice.invoiceNumber}>
+                            <td>{invoice.invoiceNumber}</td>
+                            <td>{invoice.vendor}</td>
+                            <td>{invoice.amount}</td>
+                            <td>{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
+                            <td>{invoice.project}</td>
+                            <td>
+                                <a href={getFileUrl(invoice.filePath)} target="_blank" rel="noopener noreferrer">
+                                    View File
+                                </a>
+                            </td>
+                            <td>
+                                <button 
+                                    onClick={() => handleDelete(invoice.invoiceNumber)}
+                                    style={{ backgroundColor: "red", color: "white", border: "none", padding: "5px 10px", fontSize: "12px", cursor: "pointer" }}
+                                >
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 };
