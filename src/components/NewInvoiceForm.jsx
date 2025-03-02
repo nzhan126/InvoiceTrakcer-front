@@ -4,16 +4,7 @@ import { saveInvoice } from '../api/InvoiceService';
 const NewInvoiceForm = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [invoiceFormData, setInvoiceFormData] = useState(null);
-
-
-
-
-
-
-
-
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!invoiceFormData.has('invoiceNumber')) {
       alert('Empty invoice number!');
@@ -27,7 +18,9 @@ const NewInvoiceForm = () => {
       alert('Empty project!');
     }
 
-    saveInvoice(invoiceFormData);
+    const result = await saveInvoice(invoiceFormData);
+    console.log("API Response:", result);
+    alert(result);
     setIsModalOpen(false);
     setInvoiceFormData(null);
     window.location.reload();
